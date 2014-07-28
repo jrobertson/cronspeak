@@ -9,8 +9,7 @@ module Ordinal
   refine Fixnum do
 
     def ordinal
-      self.to_s + ( (10...20).include?(self) ? 'th' : 
-                          %w{ th st nd rd th th th th th th }[self % 10] )
+      self.to_s + ( (10...20).include?(self) ? 'th' : %w{ th st nd rd th th th th th th }[self % 10] )
     end
 
   end
@@ -24,7 +23,7 @@ class CronSpeak
   def initialize(s)
 
     @count = 0
-    m, h, d, mon, raw_dow = s.scan(/([\d,\*-\/]+)\s*/).flatten(1)
+    m, h, d, mon, raw_dow = s.scan(/([\d,\*-]+)\s*/).flatten(1)
     dow(raw_dow)
     @to_s = [mins(m), hrs(h), days(d), months(mon)].join
 
@@ -32,18 +31,8 @@ class CronSpeak
 
   private
 
-  def mins(m='*')
-    puts 'm : ' + m.inspect
-    r = if m == '*' then
-      'every minute'
-    elsif m[/^\*\//]
-      m = m[/^\*\/(\d+)/,1]      
-      "every %s minute" % [m.to_i.ordinal]
-    else
-      "%s minute" % [m.to_i.ordinal]
-    end
-
-    return r
+  def mins(m='*') 
+    "%s minute" % [m.to_i.ordinal]
   end
 
   def hrs(h='*') 
