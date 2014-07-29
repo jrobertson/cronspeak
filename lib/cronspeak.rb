@@ -26,7 +26,13 @@ class CronSpeak
     @count = 0
     m, h, d, mon, raw_dow = s.scan(/([\d,\*-\/]+)\s*/).flatten(1)
     dow(raw_dow)
-    @to_s = [mins(m), hrs(h), days(d), months(mon)].join
+
+    @to_s = if m+h =~ /^\d+$/ then
+      [Time.parse(h + ':' + m)\
+                     .strftime("%l:%M%P ").lstrip, days(d), months(mon)].join
+    else
+      [mins(m), hrs(h), days(d), months(mon)].join
+    end
 
   end
 
@@ -35,12 +41,14 @@ class CronSpeak
   def mins(m='*')
 
     r = if m == '*' then
-      'every minute'
+      'every minute of '
     elsif m[/^\*\//]
       m = m[/^\*\/(\d+)/,1]      
-      "every %s minute" % [m.to_i.ordinal]
+      "every %s minute of " % [m.to_i.ordinal]
+    elsif m =~ /,/
+      "%s minutes of " % m.split(/,/).map {|x| x.to_i.ordinal }.join(' and ')
     else
-      "%s minute" % [m.to_i.ordinal]
+      "%s minute of " % [m.to_i.ordinal]
     end
 
     return r
@@ -49,12 +57,17 @@ class CronSpeak
   def hrs(h='*')
 
     r = if h == '*' then
-      ' of every hour' 
+      'every hour' 
     elsif h[/^\*\//]
       h = h[/^\*\/(\d+)/,1]      
       " of every %s hour" % [h.to_i.ordinal]
+    elsif h =~ /,/
+      "%s" % h.split(/,/)\
+        .map {|x| Time.parse(x+':00').strftime("%l%P").lstrip }.join(' and ')
+    elsif h =~ /,/
+      "%s of " % h.split(/,/).map {|x| x.to_i.ordinal }.join(' and ')
     else
-      " of %s%s" % [h, Time.parse(h+':00').strftime("%P")]
+      "%s" % [Time.parse(h+':00').strftime("%l%P").lstrip]
     end
     
     @count += 2
@@ -72,6 +85,9 @@ class CronSpeak
       d = d[/^\*\/(\d+)/,1]      
       @count += 4
       " of every %s day" % [d.to_i.ordinal] 
+    elsif d =~ /,/
+      @count += 8
+      "the %s of " % d.split(/,/).map {|x| x.to_i.ordinal }.join(' and ')
     else
       @count += 4
       " the %s" % [d.to_i.ordinal]
