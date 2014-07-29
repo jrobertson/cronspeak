@@ -33,7 +33,7 @@ class CronSpeak
   private
 
   def mins(m='*')
-    puts 'm : ' + m.inspect
+
     r = if m == '*' then
       'every minute'
     elsif m[/^\*\//]
@@ -46,10 +46,20 @@ class CronSpeak
     return r
   end
 
-  def hrs(h='*') 
-    return ' of every hour' if h == '*'
+  def hrs(h='*')
+
+    r = if h == '*' then
+      ' of every hour' 
+    elsif h[/^\*\//]
+      h = h[/^\*\/(\d+)/,1]      
+      " of every %s hour" % [h.to_i.ordinal]
+    else
+      " of %s%s" % [h, Time.parse(h+':00').strftime("%P")]
+    end
+    
     @count += 2
-    " of %s%s" % [h, Time.parse(h+':00').strftime("%P")]    
+
+    return r
   end
 
   def days(d='*') 
@@ -57,7 +67,11 @@ class CronSpeak
     r = if @count >= 8 then
       " %s in " % @dow
     elsif d == '*' then
-      ' every day' 
+      ' every day'
+    elsif d[/^\*\//]
+      d = d[/^\*\/(\d+)/,1]      
+      @count += 4
+      " of every %s day" % [d.to_i.ordinal] 
     else
       @count += 4
       " the %s of" % [d.to_i.ordinal]
@@ -69,11 +83,18 @@ class CronSpeak
   def months(mon='*') 
 
     r = if mon == '*' then
+
       if @count < 4 then
         '' 
       else
-        ' every month'
+        s = @count < 8 ? ' of' : ''
+        s + ' every month'
       end
+
+    elsif mon[/^\*\//]
+      mon = mon[/^\*\/(\d+)/,1]      
+      @count += 16
+      " of every %s month" % [mon.to_i.ordinal] 
     else
       s = @count < 8 ? 'of ' : ''
       " %s%s" % [s, Date::MONTHNAMES[mon.to_i]]

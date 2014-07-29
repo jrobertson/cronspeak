@@ -74,7 +74,7 @@ class CronSpeak
       " of every %s day" % [d.to_i.ordinal] 
     else
       @count += 4
-      " the %s of" % [d.to_i.ordinal]
+      " the %s" % [d.to_i.ordinal]
     end
 
     return r
@@ -87,8 +87,8 @@ class CronSpeak
       if @count < 4 then
         '' 
       else
-        s = @count < 8 ? ' of' : ''
-        s + ' every month'
+        s = @count < 8 ? ' of ' : ''
+        s + 'every month'
       end
 
     elsif mon[/^\*\//]
