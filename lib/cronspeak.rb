@@ -47,6 +47,9 @@ class CronSpeak
       "every %s minute of " % [m.to_i.ordinal]
     elsif m =~ /,/
       "%s minutes of " % m.split(/,/).map {|x| x.to_i.ordinal }.join(' and ')
+    elsif m =~ /\-/
+      "the %s minutes of " % m.split('-',2)\
+                                 .map {|x| x.to_i.ordinal }.join(' through ')
     else
       "%s minute of " % [m.to_i.ordinal]
     end
@@ -66,6 +69,10 @@ class CronSpeak
         .map {|x| Time.parse(x+':00').strftime("%l%P").lstrip }.join(' and ')
     elsif h =~ /,/
       "%s of " % h.split(/,/).map {|x| x.to_i.ordinal }.join(' and ')
+    elsif h =~ /\-/
+      "%s" % h.split('-',2).map do |x| 
+        Time.parse(x+':00').strftime("%l%P").lstrip 
+      end.join(' through ')
     else
       "%s" % [Time.parse(h+':00').strftime("%l%P").lstrip]
     end
@@ -88,6 +95,9 @@ class CronSpeak
     elsif d =~ /,/
       @count += 8
       "the %s of " % d.split(/,/).map {|x| x.to_i.ordinal }.join(' and ')
+    elsif d =~ /\-/
+      @count += 8
+      " the %s " % d.split('-',2).map {|x| x.to_i.ordinal }.join(' through ')
     else
       @count += 4
       " the %s" % [d.to_i.ordinal]
@@ -111,6 +121,11 @@ class CronSpeak
       mon = mon[/^\*\/(\d+)/,1]      
       @count += 16
       " of every %s month" % [mon.to_i.ordinal] 
+    elsif mon =~ /,/
+      " of %s" % mon.split(/,/)\
+                        .map {|x| Date::MONTHNAMES[x.to_i] }.join(' and ')  
+    elsif mon =~ /\-/
+      " of %s" % mon.split('-',2).map {|x| Date::MONTHNAMES[x.to_i] }.join(' through ')
     else
       s = @count < 8 ? 'of ' : ''
       " %s%s" % [s, Date::MONTHNAMES[mon.to_i]]
