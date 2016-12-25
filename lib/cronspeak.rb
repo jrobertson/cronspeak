@@ -6,7 +6,7 @@ require 'date'
 require 'time'
 
 module Ordinal
-  refine Fixnum do
+  refine Integer do
 
     def ordinal
       self.to_s + ( (10...20).include?(self) ? 'th' : 
@@ -25,7 +25,7 @@ class CronSpeak
 
     @count = 0
     m, h, d, mon, raw_dow = s.scan(/([\d,\*-\/]+)\s*/).flatten(1)
-    dow(raw_dow)
+    @dow = dow(raw_dow)
 
     @to_s = if m+h =~ /^\d+$/ then
       [Time.parse(h + ':' + m)\
@@ -39,13 +39,11 @@ class CronSpeak
   private
 
   def mins(m='*')
-
-    return 'every minute of ' if m == '*'
       
-    r = case m
+    case m
+    when /^\*$/ then 'every minute of '
     when /^\*\//
-      m = m[/^\*\/(\d+)/,1]      
-      "every %s minute of " % [m.to_i.ordinal]
+      "every %s minute of " % [m[/^\*\/(\d+)/,1].to_i.ordinal]
     when /,/
       "%s minutes of " % m.split(/,/).map {|x| x.to_i.ordinal }.join(' and ')
     when /\-/
@@ -55,7 +53,6 @@ class CronSpeak
       "%s minute of " % [m.to_i.ordinal]
     end
 
-    return r
   end
 
   def hrs(h='*')
@@ -65,9 +62,7 @@ class CronSpeak
     @count += 2    
 
     return case h  
-    when /^\*\//
-      h = h[/^\*\/(\d+)/,1]      
-      " of every %s hour" % [h.to_i.ordinal]
+    when /^\*\// then " of every %s hour" % [h[/^\*\/(\d+)/,1].to_i.ordinal]
     when /,/
       h.split(/,/)\
         .map {|x| Time.parse(x+':00').strftime("%l%P").lstrip }.join(' and ')
@@ -87,12 +82,10 @@ class CronSpeak
     return " %s in " % @dow if @count >= 8
       
     return case d
-    when /^\*$/ then
-      ' every day'
+    when /^\*$/ then ' every day'
     when/^\*\//
-      d = d[/^\*\/(\d+)/,1]      
       @count += 4
-      " of every %s day" % [d.to_i.ordinal] 
+      " of every %s day" % [d[/^\*\/(\d+)/,1].to_i.ordinal] 
     when /,/
       @count += 8
       "the %s of " % d.split(/,/).map {|x| x.to_i.ordinal }.join(' and ')
@@ -118,15 +111,13 @@ class CronSpeak
         s + 'every month'
       end
 
-    when /^\*\//
-      mon = mon[/^\*\/(\d+)/,1]      
-      @count += 16
-      " of every %s month" % [mon.to_i.ordinal] 
+    when /^\*\// then " of every %s month" % [mon[/^\*\/(\d+)/,1].to_i.ordinal]
     when /,/
       " of %s" % mon.split(/,/)\
                         .map {|x| Date::MONTHNAMES[x.to_i] }.join(' and ')  
     when /\-/
-      " of %s" % mon.split('-',2).map {|x| Date::MONTHNAMES[x.to_i] }.join(' through ')
+      " of %s" % mon.split('-',2).map {|x| Date::MONTHNAMES[x.to_i] }\
+                                                          .join(' through ')
     else
       s = @count < 8 ? 'of ' : ''
       " %s%s" % [s, Date::MONTHNAMES[mon.to_i]]
@@ -139,9 +130,8 @@ class CronSpeak
 
   def dow(raw_dow='*')
  
-    @dow = case raw_dow
-    when /^\*$/
-      ''
+    case raw_dow
+    when /^\*$/ then ''
     when /,/
       @count += 8
       raw_dow.split(/,/).map {|x| Date::DAYNAMES[x.to_i] + 's' }.join(' and ')

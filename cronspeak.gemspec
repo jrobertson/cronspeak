@@ -1,9 +1,9 @@
 Gem::Specification.new do |s|
   s.name = 'cronspeak'
-  s.version = '0.1.6'
+  s.version = '0.2.0'
   s.summary = 'Translates a cron expression into natural language'
   s.authors = ['James Robertson']
-  s.files = Dir['lib/**/*.rb']
+  s.files = Dir['lib/cronspeak.rb']
   s.signing_key = '../privatekeys/cronspeak.pem'
   s.cert_chain  = ['gem-public_cert.pem']
   s.license = 'MIT'
